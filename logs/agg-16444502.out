@@ -1,0 +1,50 @@
+Source the FSL configuration script using:
+  .
+/gpfs/milgram/apps/hpc.rhel7/software/FSL/5.0.10-centos7_64/etc/fslconf/fsl.sh 
+Source the FSL configuration script using:
+      . /gpfs/milgram/apps/hpc.rhel7/software/FSL/5.0.9/etc/fslconf/fsl.sh
+    
+The following have been reloaded with a version change:
+  1) FSL/5.0.10 => FSL/5.0.9
+
+running searchlight
+/gpfs/milgram/apps/hpc.rhel7/software/Python/Anaconda3/lib/python3.6/site-packages/h5py/__init__.py:36: FutureWarning: Conversion of the second argument of issubdtype from `float` to `np.floating` is deprecated. In future, it will be treated as `np.float64 == np.dtype(float).type`.
+  from ._conv import register_converters as _register_converters
+Using user-selected roi location: schaefer2018
+Using neurosketch data
+Running subject 0111171, with neurosketch as a data source, schaefer2018, starting with 1 ROIs
+158.nii.gz
+63.nii.gz
+73.nii.gz
+169.nii.gz
+88.nii.gz
+30.nii.gz
+58.nii.gz
+84.nii.gz
+198.nii.gz
+190.nii.gz
+167.nii.gz
+141.nii.gz
+53.nii.gz
+175.nii.gz
+197.nii.gz
+mask dimensions: (94, 94, 72)
+number of voxels in mask: 4974
+1--LENGTH OF TR: 80
+shape of features (80, 4974) shape of mask (94, 94, 72)
+2--LENGTH OF TR: 80
+shape of features (80, 4974) shape of mask (94, 94, 72)
+3--LENGTH OF TR: 80
+shape of features (80, 4974) shape of mask (94, 94, 72)
+4--LENGTH OF TR: 80
+shape of features (80, 4974) shape of mask (94, 94, 72)
+5--LENGTH OF TR: 80
+shape of features (80, 4974) shape of mask (94, 94, 72)
+6--LENGTH OF TR: 80
+shape of features (80, 4974) shape of mask (94, 94, 72)
+Runs shape (6, 80, 4974)
+(6, 80, 4974)
+shape of data: (6, 80, 4974)
+(6, 80, 4974)
+results of classifier: 0.28958333333333336, type: <class 'numpy.float64'>
+total time: 32.75911235809326, searchlight time: 15.495770692825317
