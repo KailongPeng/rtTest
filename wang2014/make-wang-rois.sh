@@ -24,17 +24,14 @@ TEMPLATE="/gpfs/milgram/project/turk-browne/jukebox/ntb/projects/sketchloop02/su
 TEMPLATE_bet=./../wang2014/${sub}/neurosketch_recognition_run_1_bet.nii.gz
 bet ${TEMPLATE} ${TEMPLATE_bet}
 WANGINFUNC=./${sub}/wanginfunc.nii.gz
+stand_funcOrien=./${sub}/wang_funcOrien.nii.gz
+python -u /gpfs/milgram/project/turk-browne/projects/rtTest/orien_trans.py stand TEMPLATE_bet stand_funcOrien
 # if [ -f "$WANG2FUNC" ]; then
 #     echo "xfm mat exists"
 # else 
 #     echo "xfm mat does not exist"
-flirt -ref $TEMPLATE_bet -in $STAND -omat $WANG2FUNC -out $WANGINFUNC
+flirt -ref $TEMPLATE_bet -in $stand_funcOrien -omat $WANG2FUNC -out $WANGINFUNC
 # fi
-
-fslview_deprecated  ${WANGINFUNC} ${TEMPLATE_bet}
-
-
-
 
 
 #convert ROIs from wang2014 standard space to individual T1 space
@@ -55,3 +52,4 @@ for ROI in $ROIS; do
   fslmaths $right -thr $THR -bin $right
 done 
 
+# fslview_deprecated  ${WANGINFUNC} ${TEMPLATE_bet}
