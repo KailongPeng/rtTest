@@ -79,26 +79,39 @@ else:
     anat = "$TO_BE_FILLED"
     
 starttime = time.time()
-
-outloc = "./{}/{}/output".format(roiloc, subject)
-
+# '1201161', '1121161','0115172','0112174' #these subject have nothing in output folder
+subjects_correctly_aligned=['1206161','0119173','1206162','1130161','1206163','0120171','0111171','1202161','0125172','0110172','0123173','0120173','0110171','0119172','0124171','0123171','1203161','0118172','0118171','0112171','1207162','0117171','0119174','0112173','0112172']
 if roiloc == "schaefer2018":
+    RESULT=np.empty((len(subjects_correctly_aligned),300))
     topN = []
-    for roinum in range(1,301):
-        result = np.load("{}/{}.npy".format(outloc, roinum))
-        RESULT = result if roinum == 1 else np.vstack((RESULT, result))
-    RESULTix = RESULT[:,0].argsort()[-N:]
+    for ii,sub in enumerate(subjects_correctly_aligned):
+        outloc = "./{}/{}/output".format(roiloc, sub)
+        for roinum in range(1,301):
+            result = np.load("{}/{}.npy".format(outloc, roinum))
+            RESULT[ii,roinum-1]=result
+            # RESULT = result if roinum == 1 else np.vstack((RESULT, result))
+    RESULT = np.mean(RESULT,axis=0)
+    print(f"RESULT.shape={RESULT.shape}")
+    RESULTix = RESULT[:].argsort()[-N:]
     for idx in RESULTix:
         topN.append("{}.nii.gz".format(idx+1))
         print(topN[-1])
 else:
+    RESULT_all=[]
     topN = []
-    for hemi in ["lh", "rh"]:
-        for roinum in range(1, 26):
-            result = np.load("{}/roi{}_{}.npy".format(outloc, roinum, hemi))
-            Result = result if roinum == 1 else np.vstack((Result, result))
-        RESULT = Result if hemi == "lh" else np.hstack((RESULT, Result))
+    for ii,sub in enumerate(subjects_correctly_aligned):
+        outloc = "./{}/{}/output".format(roiloc, sub)
+        for hemi in ["lh", "rh"]:
+            for roinum in range(1, 26):
+                result = np.load("{}/roi{}_{}.npy".format(outloc, roinum, hemi))
+                Result = result if roinum == 1 else np.vstack((Result, result))
+            RESULT = Result if hemi == "lh" else np.hstack((RESULT, Result))
+        RESULT_all.append(RESULT)
 
+    RESULT_all=np.asarray(RESULT_all)
+    print(f"RESULT_all.shape={RESULT_all.shape}")
+    RESULT_all=np.mean(RESULT_all,axis=0)
+    print(f"RESULT_all.shape={RESULT_all.shape}")
     RESULT1d = RESULT.flatten()
     RESULTix = RESULT1d.argsort()[-N:]
     x_idx, y_idx = np.unravel_index(RESULTix, RESULT.shape)
