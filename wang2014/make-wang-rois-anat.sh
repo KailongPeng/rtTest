@@ -7,7 +7,7 @@
 
 set -e #stop immediately encountering error
 
-sub=1121161 #$1
+sub=$1
 mkdir -p ./${sub} # save the output files in the current folder
 
 

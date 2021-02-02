@@ -1,14 +1,16 @@
 #!/bin/bash
-#SBATCH --partition=short   
-#SBATCH --job-name=sMasks
+#SBATCH --partition=short,scavenge,day,long
+#SBATCH --job-name=wangMasks
 #SBATCH --time=40:00
-#SBATCH --output=wangMask-%j.out
+#SBATCH --output=logs/wangMask-%j.out
 #SBATCH --mem=2g
 
 set -e #stop immediately encountering error
 
-# sub=$1
-sub=1121161 #$1
+module load AFNI/2018.08.28 ; module load FSL ; source /gpfs/milgram/apps/hpc.rhel7/software/FSL/6.0.0-centos7_64/etc/fslconf/fsl.sh ; module load miniconda ; source activate /gpfs/milgram/project/turk-browne/users/kp578/CONDA/rtcloud
+
+sub=$1
+# sub=1121161 #$1
 mkdir -p ./${sub} # save the output files in the current folder
 
 
@@ -24,15 +26,13 @@ TEMPLATE="/gpfs/milgram/project/turk-browne/jukebox/ntb/projects/sketchloop02/su
 TEMPLATE_bet=./../wang2014/${sub}/neurosketch_recognition_run_1_bet.nii.gz
 bet ${TEMPLATE} ${TEMPLATE_bet}
 WANGINFUNC=./${sub}/wanginfunc.nii.gz
-stand_funcOrien=./${sub}/wang_funcOrien.nii.gz
-python -u /gpfs/milgram/project/turk-browne/projects/rtTest/orien_trans.py stand TEMPLATE_bet stand_funcOrien
-# if [ -f "$WANG2FUNC" ]; then
-#     echo "xfm mat exists"
-# else 
-#     echo "xfm mat does not exist"
-flirt -ref $TEMPLATE_bet -in $stand_funcOrien -omat $WANG2FUNC -out $WANGINFUNC
-# fi
 
+
+# stand_funcOrien=./${sub}/wang_funcOrien.nii.gz
+# echo python -u /gpfs/milgram/project/turk-browne/projects/rtTest/orien_trans.py $STAND $TEMPLATE_bet $stand_funcOrien
+# python -u /gpfs/milgram/project/turk-browne/projects/rtTest/orien_trans.py $STAND $TEMPLATE_bet $stand_funcOrien
+# flirt -ref $TEMPLATE_bet -in $stand_funcOrien -omat $WANG2FUNC -out $WANGINFUNC
+flirt -ref $TEMPLATE_bet -in $STAND -omat $WANG2FUNC -out $WANGINFUNC
 
 #convert ROIs from wang2014 standard space to individual T1 space
 for ROI in $ROIS; do
@@ -51,5 +51,7 @@ for ROI in $ROIS; do
   fslmaths $left -thr $THR -bin $left #take threshhold and then bin the data
   fslmaths $right -thr $THR -bin $right
 done 
+
+echo done
 
 # fslview_deprecated  ${WANGINFUNC} ${TEMPLATE_bet}

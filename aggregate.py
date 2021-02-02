@@ -7,6 +7,14 @@ steps:
     pick up the top N ROIs
     combine these top N masks
     retrain the model and get the accuracy.
+
+steps modified for a unified mask rank for all subjects:
+    load accuracy for all the ROIs for all subjects
+    for each ROI, average the performance from each subject and get a single number for each ROI
+    pick up the top N ROIs
+    combine these top N masks
+    retrain the model and get the accuracy.
+
 '''
 '''
 you could try to see whether combining parcels improves performance. 
