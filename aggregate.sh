@@ -23,5 +23,7 @@ Nregions=$4
 
 # Run the python scripts
 echo "running searchlight"
-
-python -u ./aggregate.py $subject $dataloc $roiloc $Nregions
+echo source activate /gpfs/milgram/project/turk-browne/users/kp578/CONDA/rtcloud
+source activate /gpfs/milgram/project/turk-browne/users/kp578/CONDA/rtcloud
+python -u ./aggregate_greedy.py $subject $dataloc $roiloc $Nregions
+# python -u ./aggregate.py $subject $dataloc $roiloc $Nregions

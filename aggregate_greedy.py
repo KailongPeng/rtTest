@@ -23,17 +23,19 @@ This will use the .npy outputs of classRegion.py to select and merge the top N R
 in this newly combined larger mask. An example run of this is as follows:
 sbatch aggregate.sh 0111171 neurosketch schaefer2018 15
 '''
+import os
+print(f"conda env={os.environ['CONDA_DEFAULT_ENV']}") 
 import numpy as np
 import nibabel as nib
-import os
 import sys
 import time
 import pandas as pd
 from sklearn.linear_model import LogisticRegression
 import itertools
-from tqdm import tqdm
+# from tqdm import tqdm
 import pickle
 import subprocess
+from subprocess import call
 def save_obj(obj, name):
     with open(name + '.pkl', 'wb') as f:
         pickle.dump(obj, f, pickle.HIGHEST_PROTOCOL)
@@ -50,22 +52,8 @@ Takes args (in order):
     roiloc (wang2014 or schaefer2018)
     N (the number of parcels or ROIs to start with)
 '''
-subject = sys.argv[1] # "0111171"
-N = int(sys.argv[4]) # 38
 
-try:
-    roiloc = str(sys.argv[3]) #"schaefer2018"
-    print("Using user-selected roi location: {}".format(roiloc))
-except:
-    print("NO ROI LOCATION ENTERED: Using roi location of wang2014")
-    roiloc = "wang2014"
-
-try:
-    dataSource = sys.argv[2]  # could be neurosketch or realtime
-    print("Using {} data".format(dataSource))
-except:
-    print("NO DATASOURCE ENTERED: Using original neurosketch data")
-    dataSource = 'neurosketch'
+subject,dataSource,roiloc,N=sys.argv[1],sys.argv[2],sys.argv[3],int(sys.argv[4])
 
 print("Running subject {}, with {} as a data source, {}, starting with {} ROIs".format(subject, dataSource, roiloc, N))
 
@@ -87,29 +75,43 @@ else:
     funcdata = "/gpfs/milgram/project/turk-browne/projects/rtTest/searchout/feat/{sub}_pre.nii.gz"
     metadata = "/gpfs/milgram/project/turk-browne/jukebox/ntb/projects/sketchloop02/data/features/recog/metadata_{sub}_V1_{phase}.csv"
     anat = "$TO_BE_FILLED"
-    
+
+
+workingDir="/gpfs/milgram/project/turk-browne/projects/rtTest/"
 starttime = time.time()
-
-outloc = "./{}/{}/output".format(roiloc, subject)
-
+# '1201161', '1121161','0115172','0112174' #these subject have nothing in output folder
+subjects_correctly_aligned=['1206161','0119173','1206162','1130161','1206163','0120171','0111171','1202161','0125172','0110172','0123173','0120173','0110171','0119172','0124171','0123171','1203161','0118172','0118171','0112171','1207162','0117171','0119174','0112173','0112172']
 if roiloc == "schaefer2018":
+    RESULT=np.empty((len(subjects_correctly_aligned),300))
     topN = []
-    for roinum in range(1,301):
-        result = np.load("{}/{}.npy".format(outloc, roinum))
-        RESULT = result if roinum == 1 else np.vstack((RESULT, result))
-    # select N ROIs
-    RESULTix = RESULT[:,0].argsort()[-N:] # argsort from small to big
+    for ii,sub in enumerate(subjects_correctly_aligned):
+        outloc = workingDir+"/{}/{}/output".format(roiloc, sub)
+        for roinum in range(1,301):
+            result = np.load("{}/{}.npy".format(outloc, roinum))
+            RESULT[ii,roinum-1]=result
+            # RESULT = result if roinum == 1 else np.vstack((RESULT, result))
+    RESULT = np.mean(RESULT,axis=0)
+    print(f"RESULT.shape={RESULT.shape}")
+    RESULTix = RESULT[:].argsort()[-N:]
     for idx in RESULTix:
         topN.append("{}.nii.gz".format(idx+1))
-        print(topN[-1])
+        # print(topN[-1])
 else:
+    RESULT_all=[]
     topN = []
-    for hemi in ["lh", "rh"]:
-        for roinum in range(1, 26):
-            result = np.load("{}/roi{}_{}.npy".format(outloc, roinum, hemi))
-            Result = result if roinum == 1 else np.vstack((Result, result))
-        RESULT = Result if hemi == "lh" else np.hstack((RESULT, Result))
+    for ii,sub in enumerate(subjects_correctly_aligned):
+        outloc = workingDir+"/{}/{}/output".format(roiloc, sub)
+        for hemi in ["lh", "rh"]:
+            for roinum in range(1, 26):
+                result = np.load("{}/roi{}_{}.npy".format(outloc, roinum, hemi))
+                Result = result if roinum == 1 else np.vstack((Result, result))
+            RESULT = Result if hemi == "lh" else np.hstack((RESULT, Result))
+        RESULT_all.append(RESULT)
 
+    RESULT_all=np.asarray(RESULT_all)
+    print(f"RESULT_all.shape={RESULT_all.shape}")
+    RESULT_all=np.mean(RESULT_all,axis=0)
+    print(f"RESULT_all.shape={RESULT_all.shape}")
     RESULT1d = RESULT.flatten()
     RESULTix = RESULT1d.argsort()[-N:]
     x_idx, y_idx = np.unravel_index(RESULTix, RESULT.shape)
@@ -121,8 +123,10 @@ else:
             topN.append("roi{}_lh.nii.gz".format(x+1))
         else:
             topN.append("roi{}_rh.nii.gz".format(x+1))
-        print(topN[-1])
+        # print(topN[-1])
 
+print(f"len(topN)={len(topN)}")
+print(f"topN={topN}")
 
 def Wait(waitfor, delay=1):
     while not os.path.exists(waitfor):
@@ -139,7 +143,7 @@ def Class(data, bcvar):
     print(data4d.shape)
 
     accs = []
-    for run in tqdm(range(6)):
+    for run in range(6):
         testX = data4d[run]
         testY = metas[run]
         trainX = data4d[np.arange(6) != run]
@@ -161,9 +165,10 @@ def Class(data, bcvar):
 phasedict = dict(zip([1,2,3,4,5,6],["12", "12", "34", "34", "56", "56"]))
 imcodeDict={"A": "bed", "B": "Chair", "C": "table", "D": "bench"}
 
-def getMask(topN):
+def getMask(topN, subject):
+    workingDir="/gpfs/milgram/project/turk-browne/projects/rtTest/"
     for pn, parc in enumerate(topN):
-        _mask = nib.load("./{}/{}/{}".format(roiloc, subject, parc))
+        _mask = nib.load(workingDir+"/{}/{}/{}".format(roiloc, subject, parc))
         aff = _mask.affine
         _mask = _mask.get_data()
         _mask = _mask.astype(int)
@@ -172,7 +177,7 @@ def getMask(topN):
         mask[mask>0] = 1
     return mask
 
-mask=getMask(topN)
+mask=getMask(topN, subjects)
 
 print('mask dimensions: {}'. format(mask.shape))
 print('number of voxels in mask: {}'.format(np.sum(mask)))
@@ -230,6 +235,7 @@ dimsize = runIm.header.get_zooms()
 # Preset the variables
 print("Runs shape", runs.shape)
 bcvar = [metas]
+save_obj([bcvar,runs],f"./tmp/{subject}_{dataSource}_{roiloc}_{N}") #{len(topN)}_{i}
                  
 # # Distribute the information to the searchlights (preparing it to run)
 # _runs = [runs[:,:,mask==1]]
@@ -247,6 +253,15 @@ def wait(tmpFile):
         print("waiting\n")
     return np.load(tmpFile+'_result.npy')
 
+def numOfRunningJobs():
+    # subprocess.Popen(['squeue -u kp578 | wc -l > squeue.txt'],shell=True) # sl_result = Class(_runs, bcvar)
+    randomID=str(time.time())
+    # print(f"squeue -u kp578 | wc -l > squeue/{randomID}.txt")
+    call(f'squeue -u kp578 | wc -l > squeue/{randomID}.txt',shell=True)
+    numberOfJobsRunning = int(open(f"squeue/{randomID}.txt", "r").read())
+    print(f"numberOfJobsRunning={numberOfJobsRunning}")
+    return numberOfJobsRunning
+                
 # ./tmp/0125171_40_schaefer2018_neurosketch_39.pkl
 if os.path.exists(f"./tmp/{subject}_{N}_{roiloc}_{dataSource}_{1}.pkl"):
     print(f"./tmp/{subject}_{N}_{roiloc}_{dataSource}_1.pkl exists")
@@ -254,6 +269,9 @@ if os.path.exists(f"./tmp/{subject}_{N}_{roiloc}_{dataSource}_{1}.pkl"):
 
 # N-1
 def next(topN):
+    print(f"len(topN)={len(topN)}")
+    print(f"topN={topN}")
+
     if len(topN)==1:
         return None
     else:
@@ -262,28 +280,41 @@ def next(topN):
             topNs=[]
             sl_results=[]
             tmpFiles=[]
-            for i,_topN in tqdm(enumerate(allpairs)):
-                topNs.append(_topN)
-                _mask=getMask(_topN)
-                # np.save(tmpFile,_mask)
-                _runs = [runs[:,:,_mask==1]]
+            while os.path.exists("./tmp/holdon.npy"):
+                time.sleep(10)
+                print("sleep for 10s ; waiting for ./tmp/holdon.npy to be deleted")
+            np.save("./tmp/holdon",1)
 
-                print('mask dimensions: {}'. format(_mask.shape))
-                print('number of voxels in mask: {}'.format(np.sum(_mask)))
-                print("Runs shape", _runs[0].shape)
-
+            for i,_topN in enumerate(allpairs):
                 tmpFile=f"./tmp/{subject}_{N}_{roiloc}_{dataSource}_{len(topN)}_{i}"
-                save_obj([_runs,bcvar], tmpFile)
+                print(f"tmpFile={tmpFile}")
+                topNs.append(_topN)
                 tmpFiles.append(tmpFile)
+
                 if not os.path.exists(tmpFile+'_result.npy'):
-                    subprocess.Popen(['squeue -u kp578 | wc -l > squeue.txt'],shell=True) # sl_result = Class(_runs, bcvar)
-                    numberOfJobsRunning = int(open("squeue.txt", "r").read())
-                    while numberOfJobsRunning > 100:
-                        time.sleep(30)
-                        print("waiting 30")
-                        subprocess.Popen(['squeue -u kp578 | wc -l > squeue.txt'],shell=True) # sl_result = Class(_runs, bcvar)
-                        numberOfJobsRunning = int(open("squeue.txt", "r").read())
-                    proc = subprocess.Popen([f'sbatch class.sh {tmpFile}'],shell=True) # sl_result = Class(_runs, bcvar)
+
+                    # prepare brain data(runs) mask and behavior data(bcvar) 
+                    _mask=getMask(_topN,subject) ; print('mask dimensions: {}'. format(_mask.shape)) ; print('number of voxels in mask: {}'.format(np.sum(_mask)))
+                    _runs = [runs[:,:,_mask==1]] ; print("Runs shape", _runs[0].shape)
+                    print("kp1")
+                    save_obj([_runs,bcvar], tmpFile)
+                    print("kp2")
+                    numberOfJobsRunning = numOfRunningJobs()
+                    print("kp3")
+                    while numberOfJobsRunning > 110:
+                        print("kp4")
+                        print("waiting 10") ; time.sleep(10)
+                        numberOfJobsRunning = numOfRunningJobs()
+                        print("kp5")
+
+                    # get the evidence for the current mask
+                    print(f'sbatch class.sh {tmpFile}')
+                    proc = subprocess.Popen([f'sbatch class.sh {tmpFile}'],shell=True) # sl_result = Class(_runs, bcvar) 
+                    print("kp6")
+                else:
+                    print(tmpFile+'_result.npy exists!')
+            os.remove("./tmp/holdon.npy")
+
             sl_results=[]
             for tmpFile in tmpFiles:
                 sl_result=wait(tmpFile)
@@ -298,7 +329,7 @@ def next(topN):
             "bestROIs":topNs[maxID]},
             f"./tmp/{subject}_{N}_{roiloc}_{dataSource}_{len(topN)-1}"
             )
-            print(f"bestAccFor {len(topN)-1} = ./tmp/{subject}_{N}_{roiloc}_{dataSource}_{len(topN)-1}")
+            print(f"bestAcc={max(sl_results)} For {len(topN)-1} = ./tmp/{subject}_{N}_{roiloc}_{dataSource}_{len(topN)-1}")
             tmpFiles=next(topNs[maxID])
         except:
             return tmpFiles
@@ -307,26 +338,75 @@ tmpFiles=next(topN)
 
 
 def Plot():
+    # from glob import glob
+    # import matplotlib.pyplot as plt
+    # workingDir="/gpfs/milgram/project/turk-browne/projects/rtTest/"
+    # roiloc="schaefer2018"
+    # dataSource="neurosketch"
+    # subjects=glob(workingDir+"/wang2014/[0,1]*")
+    # subjects=[subject.split("/")[-1] for subject in subjects]
+
+    # GreedyBestAcc=np.zeros((len(subjects),40))
+    # for ii,subject in enumerate(subjects):            
+    #     for len_topN_1 in range(40,0,-1):
+    #         Wait(f"./tmp/{subject}_{N}_{roiloc}_{dataSource}_{len(topN)-1}.pkl")
+    #         di = load_obj(f"./tmp/{subject}_{N}_{roiloc}_{dataSource}_{len_topN_1}")
+    #         GreedyBestAcc[ii,len_topN_1-1] = di['bestAcc']
+
+    # plt.scatter(GreedyBestAcc,c='b',s=2)
+        
+    # plt.xlabel("number of ROIs")
+    # plt.ylabel("accuracy")
+    # # plt.savefig('SummaryAccuracy.png')
+    import os
+    os.chdir("/gpfs/milgram/project/turk-browne/projects/rtTest/kp_scratch/")
     from glob import glob
     import matplotlib.pyplot as plt
+    from tqdm import tqdm
+    import pickle
+    import subprocess
+    def save_obj(obj, name):
+        with open(name + '.pkl', 'wb') as f:
+            pickle.dump(obj, f, pickle.HIGHEST_PROTOCOL)
+
+    def load_obj(name):
+        with open(name + '.pkl', 'rb') as f:
+            return pickle.load(f)
 
     roiloc="schaefer2018"
     dataSource="neurosketch"
     subjects=glob("./wang2014/[0,1]*")
     subjects=[subject.split("/")[-1] for subject in subjects]
+    subjects_correctly_aligned=['1206161','0119173','1206162','1130161','1206163','0120171','0111171','1202161','0125172','0110172','0123173','0120173','0110171','0119172','0124171','0123171','1203161','0118172','0118171','0112171','1207162','0117171','0119174','0112173','0112172']
+    subjects=subjects_correctly_aligned
+    N=116
+    GreedyBestAcc=np.zeros((len(subjects),N+1))
+    for ii,subject in enumerate(subjects):
+        try:
+            GreedyBestAcc[ii,40]=np.load("./{}/{}/output/top{}.npy".format(roiloc, subject, N))
+        except:
+            pass
+                
+        for len_topN_1 in range(N-1,0,-1):
+            # Wait(f"./tmp/{subject}_{N}_{roiloc}_{dataSource}_{len_topN_1}.pkl")
+            try:
+                # print(f"./tmp/{subject}_{N}_{roiloc}_{dataSource}_{len_topN_1}")
+                di = load_obj(f"./tmp/{subject}_{N}_{roiloc}_{dataSource}_{len_topN_1}")
+                GreedyBestAcc[ii,len_topN_1-1] = di['bestAcc']
+            except:
+                pass
+    GreedyBestAcc=GreedyBestAcc.T
+    GreedyBestAcc[GreedyBestAcc==0]=None
+    plt.imshow(GreedyBestAcc)
+    _=plt.figure()
+    for i in range(GreedyBestAcc.shape[0]):
+        plt.scatter([i]*GreedyBestAcc.shape[1],GreedyBestAcc[i],c='g',s=2)
+    plt.plot(np.arange(GreedyBestAcc.shape[0]),np.nanmean(GreedyBestAcc,axis=1))
+    # plt.ylim([0.24,0.36])
+    # plt.xlabel("number of ROIs")
+    # plt.ylabel("accuracy")
 
-    GreedyBestAcc=np.zeros((len(subjects),40))
-    for ii,subject in enumerate(subjects):            
-        for len_topN_1 in range(40,0,-1):
-            Wait(f"./tmp/{subject}_{N}_{roiloc}_{dataSource}_{len(topN)-1}.pkl")
-            di = load_obj(f"./tmp/{subject}_{N}_{roiloc}_{dataSource}_{len_topN_1}")
-            GreedyBestAcc[ii,len_topN_1-1] = di['bestAcc']
 
-    plt.scatter(GreedyBestAcc,c='b',s=2)
-        
-    plt.xlabel("number of ROIs")
-    plt.ylabel("accuracy")
-    # plt.savefig('SummaryAccuracy.png')
 
 # #SAVE accuracy
 # outfile = "./{}/{}/output/top{}.npy".format(roiloc, subject, N)

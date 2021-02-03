@@ -77,7 +77,8 @@ else:
     funcdata = "/gpfs/milgram/project/turk-browne/projects/rtTest/searchout/feat/{sub}_pre.nii.gz"
     metadata = "/gpfs/milgram/project/turk-browne/jukebox/ntb/projects/sketchloop02/data/features/recog/metadata_{sub}_V1_{phase}.csv"
     anat = "$TO_BE_FILLED"
-    
+
+workingDir="/gpfs/milgram/project/turk-browne/projects/rtTest/"
 starttime = time.time()
 # '1201161', '1121161','0115172','0112174' #these subject have nothing in output folder
 subjects_correctly_aligned=['1206161','0119173','1206162','1130161','1206163','0120171','0111171','1202161','0125172','0110172','0123173','0120173','0110171','0119172','0124171','0123171','1203161','0118172','0118171','0112171','1207162','0117171','0119174','0112173','0112172']
@@ -85,7 +86,7 @@ if roiloc == "schaefer2018":
     RESULT=np.empty((len(subjects_correctly_aligned),300))
     topN = []
     for ii,sub in enumerate(subjects_correctly_aligned):
-        outloc = "./{}/{}/output".format(roiloc, sub)
+        outloc = workingDir+"/{}/{}/output".format(roiloc, sub)
         for roinum in range(1,301):
             result = np.load("{}/{}.npy".format(outloc, roinum))
             RESULT[ii,roinum-1]=result
@@ -100,7 +101,7 @@ else:
     RESULT_all=[]
     topN = []
     for ii,sub in enumerate(subjects_correctly_aligned):
-        outloc = "./{}/{}/output".format(roiloc, sub)
+        outloc = workingDir+"/{}/{}/output".format(roiloc, sub)
         for hemi in ["lh", "rh"]:
             for roinum in range(1, 26):
                 result = np.load("{}/roi{}_{}.npy".format(outloc, roinum, hemi))
@@ -164,7 +165,7 @@ phasedict = dict(zip([1,2,3,4,5,6],["12", "12", "34", "34", "56", "56"]))
 imcodeDict={"A": "bed", "B": "Chair", "C": "table", "D": "bench"}
 
 for pn, parc in enumerate(topN):
-    _mask = nib.load("./{}/{}/{}".format(roiloc, subject, parc))
+    _mask = nib.load(workingDir+"/{}/{}/{}".format(roiloc, subject, parc))
     aff = _mask.affine
     _mask = _mask.get_data()
     _mask = _mask.astype(int)
@@ -243,16 +244,16 @@ tot = time.time() - starttime
 print('total time: {}, searchlight time: {}'.format(tot, SL))
 
 #SAVE accuracy
-outfile = "./{}/{}/output/top{}.npy".format(roiloc, subject, N)
+outfile = workingDir+"/{}/{}/output/top{}.npy".format(roiloc, subject, N)
 np.save(outfile, np.array(sl_result))
 #SAVE mask
 savemask = nib.Nifti1Image(mask, affine=aff)
-nib.save(savemask, "./{}/{}/output/top{}mask.nii.gz".format(roiloc, subject, N))
+nib.save(savemask, workingDir+"/{}/{}/output/top{}mask.nii.gz".format(roiloc, subject, N))
 #SAVE roilist, nvox
 ROILIST = [r for r in topN]
 ROILIST.append(np.sum(mask))
 ROILIST = pd.DataFrame(ROILIST)
-ROILIST.to_csv("./{}/{}/output/top{}.csv".format(roiloc, subject, N))
+ROILIST.to_csv(workingDir+"/{}/{}/output/top{}.csv".format(roiloc, subject, N))
 
 
 
@@ -273,6 +274,8 @@ def plot():
         
         
     testDir='/gpfs/milgram/project/turk-browne/projects/rtTest/'
+    subjects_correctly_aligned=['1206161','0119173','1206162','1130161','1206163','0120171','0111171','1202161','0125172','0110172','0123173','0120173','0110171','0119172','0124171','0123171','1203161','0118172','0118171','0112171','1207162','0117171','0119174','0112173','0112172']
+    subs=subjects_correctly_aligned
     subjects=subs #["0110171", "0110172", "0111171"]
     hemis=["lh", "rh"]
 
