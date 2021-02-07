@@ -1,8 +1,8 @@
 #!/bin/bash
-#SBATCH --partition=short   
-#SBATCH --job-name=sMasks
+#SBATCH --partition=short,scavenge,day,long   
+#SBATCH --job-name=wangMasks
 #SBATCH --time=40:00
-#SBATCH --output=wangMask-%j.out
+#SBATCH --output=logs/wangMask-%j.out
 #SBATCH --mem=2g
 
 set -e #stop immediately encountering error
@@ -41,13 +41,11 @@ flirt -ref $FUNC_bet -in $ANAT_bet -omat $ANAT2FUNC -out $ANATinFUNC
 # apply anat to func on wang_in_anat
 flirt -ref $FUNC_bet -in $WANGinANAT  -out $WANGinFUNC -applyxfm -init $ANAT2FUNC
 
-fslview_deprecated  ${WANGinFUNC} ${FUNC_bet} ${ANATinFUNC}
+# combine wang2anat and anat2func to wang2func
+# convert_xfm -omat AtoC.mat -concat BtoC.mat AtoB.mat
+convert_xfm -omat $WANG2FUNC -concat $ANAT2FUNC $WANG2ANAT
 
-
-
-
-
-
+# fslview_deprecated  ${WANGinFUNC} ${FUNC_bet} ${ANATinFUNC}
 
 
 #convert ROIs from wang2014 standard space to individual T1 space
