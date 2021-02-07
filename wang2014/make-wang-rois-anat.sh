@@ -7,6 +7,7 @@
 
 set -e #stop immediately encountering error
 
+module load FSL
 sub=$1
 mkdir -p ./${sub} # save the output files in the current folder
 
@@ -44,7 +45,6 @@ flirt -ref $FUNC_bet -in $WANGinANAT  -out $WANGinFUNC -applyxfm -init $ANAT2FUN
 # combine wang2anat and anat2func to wang2func
 # convert_xfm -omat AtoC.mat -concat BtoC.mat AtoB.mat
 convert_xfm -omat $WANG2FUNC -concat $ANAT2FUNC $WANG2ANAT
-
 
 #convert ROIs from wang2014 standard space to individual T1 space
 for ROI in $ROIS; do
