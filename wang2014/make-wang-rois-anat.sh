@@ -1,8 +1,8 @@
 #!/bin/bash
-#SBATCH --partition=short   
-#SBATCH --job-name=sMasks
+#SBATCH --partition=short,scavenge,day,long   
+#SBATCH --job-name=wangMasks
 #SBATCH --time=40:00
-#SBATCH --output=wangMask-%j.out
+#SBATCH --output=logs/wangMask-%j.out
 #SBATCH --mem=2g
 
 set -e #stop immediately encountering error
