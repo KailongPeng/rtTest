@@ -41,13 +41,9 @@ flirt -ref $FUNC_bet -in $ANAT_bet -omat $ANAT2FUNC -out $ANATinFUNC
 # apply anat to func on wang_in_anat
 flirt -ref $FUNC_bet -in $WANGinANAT  -out $WANGinFUNC -applyxfm -init $ANAT2FUNC
 
-fslview_deprecated  ${WANGinFUNC} ${FUNC_bet} ${ANATinFUNC}
-
-
-
-
-
-
+# combine wang2anat and anat2func to wang2func
+# convert_xfm -omat AtoC.mat -concat BtoC.mat AtoB.mat
+convert_xfm -omat $WANG2FUNC -concat $ANAT2FUNC $WANG2ANAT
 
 
 #convert ROIs from wang2014 standard space to individual T1 space
