@@ -8,7 +8,7 @@ steps:
     combine these top N masks
     retrain the model and get the accuracy.
 
-steps modified for a unified mask rank for all subjects:
+steps modified for a unified mask rank for all subjects: uniMaskRank_
     load accuracy for all the ROIs for all subjects
     for each ROI, average the performance from each subject and get a single number for each ROI
     pick up the top N ROIs
@@ -243,17 +243,17 @@ SL = time.time() - slstart
 tot = time.time() - starttime
 print('total time: {}, searchlight time: {}'.format(tot, SL))
 
-#SAVE accuracy
-outfile = workingDir+"/{}/{}/output/top{}.npy".format(roiloc, subject, N)
+# SAVE accuracy
+outfile = workingDir+"/{}/{}/output/uniMaskRank_top{}.npy".format(roiloc, subject, N)
 np.save(outfile, np.array(sl_result))
-#SAVE mask
+# SAVE mask
 savemask = nib.Nifti1Image(mask, affine=aff)
-nib.save(savemask, workingDir+"/{}/{}/output/top{}mask.nii.gz".format(roiloc, subject, N))
-#SAVE roilist, nvox
+nib.save(savemask, workingDir+"/{}/{}/output/uniMaskRank_top{}mask.nii.gz".format(roiloc, subject, N))
+# SAVE roilist, nvox
 ROILIST = [r for r in topN]
 ROILIST.append(np.sum(mask))
 ROILIST = pd.DataFrame(ROILIST)
-ROILIST.to_csv(workingDir+"/{}/{}/output/top{}.csv".format(roiloc, subject, N))
+ROILIST.to_csv(workingDir+"/{}/{}/output/uniMaskRank_top{}.csv".format(roiloc, subject, N))
 
 
 

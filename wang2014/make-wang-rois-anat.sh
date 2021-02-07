@@ -8,6 +8,7 @@
 set -e #stop immediately encountering error
 
 module load FSL
+. ${FSLDIR}/etc/fslconf/fsl.sh
 sub=$1
 mkdir -p ./${sub} # save the output files in the current folder
 
@@ -51,8 +52,8 @@ for ROI in $ROIS; do
   for HEMI in lh rh; do
     INPUT=$ROIpath/perc_VTPM_vol_${ROI}_${HEMI}.nii.gz # wang2014 standard space
     OUTPUT=./${sub}/${ROI}_${HEMI}.nii.gz #individual T1 space ROI outputs
-    echo flirt -ref $TEMPLATE_bet -in $INPUT -out $OUTPUT -applyxfm -init $WANG2FUNC
-    flirt -ref $TEMPLATE_bet -in $INPUT -out $OUTPUT -applyxfm -init $WANG2FUNC
+    echo flirt -ref $FUNC_bet -in $INPUT -out $OUTPUT -applyxfm -init $WANG2FUNC
+    flirt -ref $FUNC_bet -in $INPUT -out $OUTPUT -applyxfm -init $WANG2FUNC
   done
   
   #merge the mask from two hemisphere for selected ROI
