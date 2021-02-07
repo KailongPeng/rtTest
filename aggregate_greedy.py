@@ -177,7 +177,7 @@ def getMask(topN, subject):
         mask[mask>0] = 1
     return mask
 
-mask=getMask(topN, subjects)
+mask=getMask(topN, subject)
 
 print('mask dimensions: {}'. format(mask.shape))
 print('number of voxels in mask: {}'.format(np.sum(mask)))
@@ -250,7 +250,7 @@ save_obj([bcvar,runs],f"./tmp/{subject}_{dataSource}_{roiloc}_{N}") #{len(topN)}
 def wait(tmpFile):
     while not os.path.exists(tmpFile+'_result.npy'):
         time.sleep(5)
-        print("waiting\n")
+        print(f"waiting for {tmpFile}_result.npy\n")
     return np.load(tmpFile+'_result.npy')
 
 def numOfRunningJobs():
@@ -261,7 +261,20 @@ def numOfRunningJobs():
     numberOfJobsRunning = int(open(f"squeue/{randomID}.txt", "r").read())
     print(f"numberOfJobsRunning={numberOfJobsRunning}")
     return numberOfJobsRunning
-                
+
+if not os.path.exists(f"./tmp/{subject}_{N}_{roiloc}_{dataSource}_{len(topN)}.pkl"):
+    _runs = [runs[:,:,mask==1]]
+    print("Runs shape", _runs[0].shape)
+    slstart = time.time()
+    sl_result = Class(_runs, bcvar)
+
+    save_obj({"subject":subject,
+    "startFromN":N,
+    "currNumberOfROI":len(topN),
+    "bestAcc":sl_result, # this is the sl_result for the topN, not the bestAcc, bestAcc is for the purpose of keeping consistent with others
+    "bestROIs":topN},# this is the topN, not the bestROIs, bestROIs is for the purpose of keeping consistent with others
+    f"./tmp/{subject}_{N}_{roiloc}_{dataSource}_{len(topN)}"
+    )
 # ./tmp/0125171_40_schaefer2018_neurosketch_39.pkl
 if os.path.exists(f"./tmp/{subject}_{N}_{roiloc}_{dataSource}_{1}.pkl"):
     print(f"./tmp/{subject}_{N}_{roiloc}_{dataSource}_1.pkl exists")
@@ -294,22 +307,21 @@ def next(topN):
                 if not os.path.exists(tmpFile+'_result.npy'):
 
                     # prepare brain data(runs) mask and behavior data(bcvar) 
-                    _mask=getMask(_topN,subject) ; print('mask dimensions: {}'. format(_mask.shape)) ; print('number of voxels in mask: {}'.format(np.sum(_mask)))
-                    _runs = [runs[:,:,_mask==1]] ; print("Runs shape", _runs[0].shape)
-                    print("kp1")
-                    save_obj([_runs,bcvar], tmpFile)
+
+                    save_obj([_topN,subject,dataSource,roiloc,N], tmpFile)
+
                     print("kp2")
                     numberOfJobsRunning = numOfRunningJobs()
                     print("kp3")
-                    while numberOfJobsRunning > 110:
-                        print("kp4")
-                        print("waiting 10") ; time.sleep(10)
+                    while numberOfJobsRunning > 400: # 300 is not filling it up
+                        print("kp4 300")
+                        print("waiting 10, too many jobs running") ; time.sleep(10)
                         numberOfJobsRunning = numOfRunningJobs()
                         print("kp5")
 
                     # get the evidence for the current mask
                     print(f'sbatch class.sh {tmpFile}')
-                    proc = subprocess.Popen([f'sbatch class.sh {tmpFile}'],shell=True) # sl_result = Class(_runs, bcvar) 
+                    proc = subprocess.Popen([f'sbatch --requeue class.sh {tmpFile}'],shell=True) # sl_result = Class(_runs, bcvar) 
                     print("kp6")
                 else:
                     print(tmpFile+'_result.npy exists!')
@@ -381,6 +393,7 @@ def Plot():
     subjects=subjects_correctly_aligned
     N=116
     GreedyBestAcc=np.zeros((len(subjects),N+1))
+    GreedyBestAcc[GreedyBestAcc==0]=None
     for ii,subject in enumerate(subjects):
         try:
             GreedyBestAcc[ii,40]=np.load("./{}/{}/output/top{}.npy".format(roiloc, subject, N))
@@ -396,7 +409,7 @@ def Plot():
             except:
                 pass
     GreedyBestAcc=GreedyBestAcc.T
-    GreedyBestAcc[GreedyBestAcc==0]=None
+    
     plt.imshow(GreedyBestAcc)
     _=plt.figure()
     for i in range(GreedyBestAcc.shape[0]):

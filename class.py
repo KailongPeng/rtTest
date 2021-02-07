@@ -3,6 +3,7 @@ print(f"conda env={os.environ['CONDA_DEFAULT_ENV']}")
 import sys,pickle
 import numpy as np
 from sklearn.linear_model import LogisticRegression
+import nibabel as nib
 
 def save_obj(obj, name):
     with open(name + '.pkl', 'wb') as f:
@@ -38,9 +39,26 @@ def Class(data, bcvar):
     
     return np.mean(accs)
 
+def getMask(topN, subject):
+    workingDir="/gpfs/milgram/project/turk-browne/projects/rtTest/"
+    for pn, parc in enumerate(topN):
+        _mask = nib.load(workingDir+"/{}/{}/{}".format(roiloc, subject, parc))
+        aff = _mask.affine
+        _mask = _mask.get_data()
+        _mask = _mask.astype(int)
+        # say some things about the mask.
+        mask = _mask if pn == 0 else mask + _mask
+        mask[mask>0] = 1
+    return mask
 
 tmpFile = sys.argv[1]
-[_runs,bcvar] = load_obj(tmpFile)
+print(f"tmpFile={tmpFile}")
+[_topN,subject,dataSource,roiloc,N] = load_obj(tmpFile)
+[bcvar,runs] = load_obj(f"./tmp/{subject}_{dataSource}_{roiloc}_{N}") 
+_mask=getMask(_topN,subject) ; print('mask dimensions: {}'. format(_mask.shape)) ; print('number of voxels in mask: {}'.format(np.sum(_mask)))
+_runs = [runs[:,:,_mask==1]] ; print("Runs shape", _runs[0].shape)
+
+# [_runs,bcvar] = load_obj(tmpFile)
 sl_result = Class(_runs, bcvar)
 
 np.save(tmpFile+'_result',sl_result)
