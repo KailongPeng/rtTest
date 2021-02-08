@@ -235,7 +235,7 @@ dimsize = runIm.header.get_zooms()
 # Preset the variables
 print("Runs shape", runs.shape)
 bcvar = [metas]
-save_obj([bcvar,runs],f"./tmp/{subject}_{dataSource}_{roiloc}_{N}") #{len(topN)}_{i}
+save_obj([bcvar,runs],f"./tmp_folder/{subject}_{dataSource}_{roiloc}_{N}") #{len(topN)}_{i}
                  
 # # Distribute the information to the searchlights (preparing it to run)
 # _runs = [runs[:,:,mask==1]]
@@ -262,7 +262,7 @@ def numOfRunningJobs():
     print(f"numberOfJobsRunning={numberOfJobsRunning}")
     return numberOfJobsRunning
 
-if not os.path.exists(f"./tmp/{subject}_{N}_{roiloc}_{dataSource}_{len(topN)}.pkl"):
+if not os.path.exists(f"./tmp_folder/{subject}_{N}_{roiloc}_{dataSource}_{len(topN)}.pkl"):
     _runs = [runs[:,:,mask==1]]
     print("Runs shape", _runs[0].shape)
     slstart = time.time()
@@ -273,11 +273,11 @@ if not os.path.exists(f"./tmp/{subject}_{N}_{roiloc}_{dataSource}_{len(topN)}.pk
     "currNumberOfROI":len(topN),
     "bestAcc":sl_result, # this is the sl_result for the topN, not the bestAcc, bestAcc is for the purpose of keeping consistent with others
     "bestROIs":topN},# this is the topN, not the bestROIs, bestROIs is for the purpose of keeping consistent with others
-    f"./tmp/{subject}_{N}_{roiloc}_{dataSource}_{len(topN)}"
+    f"./tmp_folder/{subject}_{N}_{roiloc}_{dataSource}_{len(topN)}"
     )
-# ./tmp/0125171_40_schaefer2018_neurosketch_39.pkl
-if os.path.exists(f"./tmp/{subject}_{N}_{roiloc}_{dataSource}_{1}.pkl"):
-    print(f"./tmp/{subject}_{N}_{roiloc}_{dataSource}_1.pkl exists")
+# ./tmp_folder/0125171_40_schaefer2018_neurosketch_39.pkl
+if os.path.exists(f"./tmp_folder/{subject}_{N}_{roiloc}_{dataSource}_{1}.pkl"):
+    print(f"./tmp_folder/{subject}_{N}_{roiloc}_{dataSource}_1.pkl exists")
     raise Exception('runned or running')
 
 # N-1
@@ -293,13 +293,13 @@ def next(topN):
             topNs=[]
             sl_results=[]
             tmpFiles=[]
-            while os.path.exists("./tmp/holdon.npy"):
+            while os.path.exists("./tmp_folder/holdon.npy"):
                 time.sleep(10)
-                print("sleep for 10s ; waiting for ./tmp/holdon.npy to be deleted")
-            np.save("./tmp/holdon",1)
+                print("sleep for 10s ; waiting for ./tmp_folder/holdon.npy to be deleted")
+            np.save("./tmp_folder/holdon",1)
 
             for i,_topN in enumerate(allpairs):
-                tmpFile=f"./tmp/{subject}_{N}_{roiloc}_{dataSource}_{len(topN)}_{i}"
+                tmpFile=f"./tmp_folder/{subject}_{N}_{roiloc}_{dataSource}_{len(topN)}_{i}"
                 print(f"tmpFile={tmpFile}")
                 topNs.append(_topN)
                 tmpFiles.append(tmpFile)
@@ -325,7 +325,7 @@ def next(topN):
                     print("kp6")
                 else:
                     print(tmpFile+'_result.npy exists!')
-            os.remove("./tmp/holdon.npy")
+            os.remove("./tmp_folder/holdon.npy")
 
             sl_results=[]
             for tmpFile in tmpFiles:
@@ -339,9 +339,9 @@ def next(topN):
             "currNumberOfROI":len(topN)-1,
             "bestAcc":max(sl_results),
             "bestROIs":topNs[maxID]},
-            f"./tmp/{subject}_{N}_{roiloc}_{dataSource}_{len(topN)-1}"
+            f"./tmp_folder/{subject}_{N}_{roiloc}_{dataSource}_{len(topN)-1}"
             )
-            print(f"bestAcc={max(sl_results)} For {len(topN)-1} = ./tmp/{subject}_{N}_{roiloc}_{dataSource}_{len(topN)-1}")
+            print(f"bestAcc={max(sl_results)} For {len(topN)-1} = ./tmp_folder/{subject}_{N}_{roiloc}_{dataSource}_{len(topN)-1}")
             tmpFiles=next(topNs[maxID])
         except:
             return tmpFiles
@@ -361,8 +361,8 @@ def Plot():
     # GreedyBestAcc=np.zeros((len(subjects),40))
     # for ii,subject in enumerate(subjects):            
     #     for len_topN_1 in range(40,0,-1):
-    #         Wait(f"./tmp/{subject}_{N}_{roiloc}_{dataSource}_{len(topN)-1}.pkl")
-    #         di = load_obj(f"./tmp/{subject}_{N}_{roiloc}_{dataSource}_{len_topN_1}")
+    #         Wait(f"./tmp_folder/{subject}_{N}_{roiloc}_{dataSource}_{len(topN)-1}.pkl")
+    #         di = load_obj(f"./tmp_folder/{subject}_{N}_{roiloc}_{dataSource}_{len_topN_1}")
     #         GreedyBestAcc[ii,len_topN_1-1] = di['bestAcc']
 
     # plt.scatter(GreedyBestAcc,c='b',s=2)
@@ -401,10 +401,10 @@ def Plot():
             pass
                 
         for len_topN_1 in range(N-1,0,-1):
-            # Wait(f"./tmp/{subject}_{N}_{roiloc}_{dataSource}_{len_topN_1}.pkl")
+            # Wait(f"./tmp_folder/{subject}_{N}_{roiloc}_{dataSource}_{len_topN_1}.pkl")
             try:
-                # print(f"./tmp/{subject}_{N}_{roiloc}_{dataSource}_{len_topN_1}")
-                di = load_obj(f"./tmp/{subject}_{N}_{roiloc}_{dataSource}_{len_topN_1}")
+                # print(f"./tmp_folder/{subject}_{N}_{roiloc}_{dataSource}_{len_topN_1}")
+                di = load_obj(f"./tmp_folder/{subject}_{N}_{roiloc}_{dataSource}_{len_topN_1}")
                 GreedyBestAcc[ii,len_topN_1-1] = di['bestAcc']
             except:
                 pass
@@ -438,62 +438,113 @@ def Plot():
 
 
 def plot():
-    # code to load and compare the result of above:
-    # SummaryAccuracy.py
+    # # plt.savefig('SummaryAccuracy.png')
+    import os
+    os.chdir("/gpfs/milgram/project/turk-browne/projects/rtTest/kp_scratch/")
     from glob import glob
-    import numpy as np
-    di="/gpfs/milgram/project/turk-browne/jukebox/ntb/projects/sketchloop02/subjects/"
-
-    subs=glob(f"{di}[0,1]*_neurosketch")
-    subs=[sub.split("/")[-1].split("_")[0] for sub in subs]
-    subjects=""
-    for sub in subs:
-        subjects=subjects+sub+" "
-        
-        
-    testDir='/gpfs/milgram/project/turk-browne/projects/rtTest/'
-    subjects=subs #["0110171", "0110172", "0111171"]
-    hemis=["lh", "rh"]
-
-    wangAcc=np.zeros((50,len(subs)))
-    roiloc="wang2014"
-    for sub_i,sub in enumerate(subjects):
-        for num in range(1,51):
-            try:
-                wangAcc[num-1,sub_i]=np.load(f"{testDir}{roiloc}/{sub}/output/top{num}.npy")
-    #             print(f"{roiloc} {sub} {num} ROIs acc={wangAcc[num-1,sub_i]}")
-            except:
-                pass
-
-    schaeferAcc=np.zeros((300,3))
-    roiloc="schaefer2018"
-    for sub_i,sub in enumerate(subjects):
-        for num in range(1,301):
-            try:
-                schaeferAcc[num-1,sub_i]=np.load(f"{testDir}{roiloc}/{sub}/output/top{num}.npy")
-    #             print(f"{roiloc} {sub} {num} ROIs acc={schaeferAcc[num-1,sub_i]}")
-            except:
-                pass
-
-
-    wangAcc=wangAcc[:,wangAcc[0]!=0]
-    schaeferAcc=schaeferAcc[:,schaeferAcc[0]!=0]
-    schaeferAcc[schaeferAcc==0]=None
-
     import matplotlib.pyplot as plt
-    plt.plot(np.nanmean(wangAcc,axis=1))
-    plt.plot(np.nanmean(schaeferAcc,axis=1))
+    from tqdm import tqdm
+    import pickle
+    import subprocess
+    def save_obj(obj, name):
+        with open(name + '.pkl', 'wb') as f:
+            pickle.dump(obj, f, pickle.HIGHEST_PROTOCOL)
 
+    def load_obj(name):
+        with open(name + '.pkl', 'rb') as f:
+            return pickle.load(f)
 
-    for i in range(schaeferAcc.shape[0]):
-        plt.scatter([i]*schaeferAcc.shape[1],schaeferAcc[i],c='g',s=2)
-    for i in range(wangAcc.shape[0]):
-        plt.scatter([i]*wangAcc.shape[1],wangAcc[i],c='b',s=2)
+    roiloc="schaefer2018"
+    dataSource="neurosketch"
+    # subjects=glob("./wang2014/[0,1]*")
+    # subjects=[subject.split("/")[-1] for subject in subjects]
+    subjects_correctly_aligned=['1206161','0119173','1206162','1130161','1206163','0120171','0111171','1202161','0125172','0110172','0123173','0120173','0110171','0119172','0124171','0123171','1203161','0118172','0118171','0112171','1207162','0117171','0119174','0112173','0112172']
+    subjects=subjects_correctly_aligned
+    N=31
+    workingPath="/gpfs/milgram/project/turk-browne/projects/rtTest/"
+    GreedyBestAcc=np.zeros((len(subjects),N+1))
+    GreedyBestAcc[GreedyBestAcc==0]=None
+    for ii,subject in enumerate(subjects):
+        try:
+            GreedyBestAcc[ii,N]=np.load(workingPath+"./{}/{}/output/top{}.npy".format(roiloc, subject, N))
+        except:
+            pass
+
+        for len_topN_1 in range(N-1,0,-1):
+            # Wait(f"./tmp/{subject}_{N}_{roiloc}_{dataSource}_{len_topN_1}.pkl")
+            try:
+                # print(f"./tmp/{subject}_{N}_{roiloc}_{dataSource}_{len_topN_1}")
+                di = load_obj(f"./tmp_folder/{subject}_{N}_{roiloc}_{dataSource}_{len_topN_1}")
+                GreedyBestAcc[ii,len_topN_1-1] = di['bestAcc']
+            except:
+                pass
+    GreedyBestAcc=GreedyBestAcc.T
+
+    plt.imshow(GreedyBestAcc)
+    _=plt.figure()
+    for i in range(GreedyBestAcc.shape[0]):
+        plt.scatter([i]*GreedyBestAcc.shape[1],GreedyBestAcc[i],c='g',s=2)
+    plt.plot(np.arange(GreedyBestAcc.shape[0]),np.nanmean(GreedyBestAcc,axis=1))
+    # plt.ylim([0.19,0.36])
+    # plt.xlabel("number of ROIs")
+    # plt.ylabel("accuracy")
+
+    # # code to load and compare the result of above:
+    # # SummaryAccuracy.py
+    # from glob import glob
+    # import numpy as np
+    # di="/gpfs/milgram/project/turk-browne/jukebox/ntb/projects/sketchloop02/subjects/"
+
+    # subs=glob(f"{di}[0,1]*_neurosketch")
+    # subs=[sub.split("/")[-1].split("_")[0] for sub in subs]
+    # subjects=""
+    # for sub in subs:
+    #     subjects=subjects+sub+" "
         
-    plt.xlabel("number of ROIs")
-    plt.ylabel("accuracy")
-    plt.savefig('SummaryAccuracy.png')
-    # next step is to use averageAggregatee.sh to cnvert things to standard space and add things together to visualize things.
+        
+    # testDir='/gpfs/milgram/project/turk-browne/projects/rtTest/'
+    # subjects=subs #["0110171", "0110172", "0111171"]
+    # hemis=["lh", "rh"]
+
+    # wangAcc=np.zeros((50,len(subs)))
+    # roiloc="wang2014"
+    # for sub_i,sub in enumerate(subjects):
+    #     for num in range(1,51):
+    #         try:
+    #             wangAcc[num-1,sub_i]=np.load(f"{testDir}{roiloc}/{sub}/output/top{num}.npy")
+    # #             print(f"{roiloc} {sub} {num} ROIs acc={wangAcc[num-1,sub_i]}")
+    #         except:
+    #             pass
+
+    # schaeferAcc=np.zeros((300,3))
+    # roiloc="schaefer2018"
+    # for sub_i,sub in enumerate(subjects):
+    #     for num in range(1,301):
+    #         try:
+    #             schaeferAcc[num-1,sub_i]=np.load(f"{testDir}{roiloc}/{sub}/output/top{num}.npy")
+    # #             print(f"{roiloc} {sub} {num} ROIs acc={schaeferAcc[num-1,sub_i]}")
+    #         except:
+    #             pass
+
+
+    # wangAcc=wangAcc[:,wangAcc[0]!=0]
+    # schaeferAcc=schaeferAcc[:,schaeferAcc[0]!=0]
+    # schaeferAcc[schaeferAcc==0]=None
+
+    # import matplotlib.pyplot as plt
+    # plt.plot(np.nanmean(wangAcc,axis=1))
+    # plt.plot(np.nanmean(schaeferAcc,axis=1))
+
+
+    # for i in range(schaeferAcc.shape[0]):
+    #     plt.scatter([i]*schaeferAcc.shape[1],schaeferAcc[i],c='g',s=2)
+    # for i in range(wangAcc.shape[0]):
+    #     plt.scatter([i]*wangAcc.shape[1],wangAcc[i],c='b',s=2)
+        
+    # plt.xlabel("number of ROIs")
+    # plt.ylabel("accuracy")
+    # plt.savefig('SummaryAccuracy.png')
+    # # next step is to use averageAggregatee.sh to cnvert things to standard space and add things together to visualize things.
 
 
 

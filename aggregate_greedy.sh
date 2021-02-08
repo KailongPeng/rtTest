@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 # Input python command to be submitted as a job
 #SBATCH --output=logs/agg-%j.out
-#SBATCH --job-name aggregate
-#SBATCH --partition=verylong,short,day,scavenge
-#SBATCH --time=1:00:00 #20:00:00
+#SBATCH --job-name aggregate_greedy
+#SBATCH --partition=verylong,long,scavenge
+#SBATCH --time=20:00:00
 #SBATCH --mem=10000
 #SBATCH -n 5
 
@@ -24,5 +24,5 @@ Nregions=$4
 echo "running searchlight"
 echo source activate /gpfs/milgram/project/turk-browne/users/kp578/CONDA/rtcloud
 source activate /gpfs/milgram/project/turk-browne/users/kp578/CONDA/rtcloud
-# python -u ./aggregate_greedy.py $subject $dataloc $roiloc $Nregions
-python -u ./aggregate.py $subject $dataloc $roiloc $Nregions
+python -u ./aggregate_greedy.py $subject $dataloc $roiloc $Nregions
+# python -u ./aggregate.py $subject $dataloc $roiloc $Nregions

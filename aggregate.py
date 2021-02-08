@@ -261,16 +261,14 @@ ROILIST.to_csv(workingDir+"/{}/{}/output/uniMaskRank_top{}.csv".format(roiloc, s
 
 def plot():
     # code to load and compare the result of above:
-    # SummaryAccuracy.py
     from glob import glob
     import numpy as np
-    di="/gpfs/milgram/project/turk-browne/jukebox/ntb/projects/sketchloop02/subjects/"
-
-    subs=glob(f"{di}[0,1]*_neurosketch")
-    subs=[sub.split("/")[-1].split("_")[0] for sub in subs]
-    subjects=""
-    for sub in subs:
-        subjects=subjects+sub+" "
+    # di="/gpfs/milgram/project/turk-browne/jukebox/ntb/projects/sketchloop02/subjects/"
+    # subs=glob(f"{di}[0,1]*_neurosketch")
+    # subs=[sub.split("/")[-1].split("_")[0] for sub in subs]
+    # subjects=""
+    # for sub in subs:
+    #     subjects=subjects+sub+" "
         
         
     testDir='/gpfs/milgram/project/turk-browne/projects/rtTest/'
@@ -283,21 +281,21 @@ def plot():
     roiloc="wang2014"
     for sub_i,sub in enumerate(subjects):
         for num in range(1,51):
-            try:
-                wangAcc[num-1,sub_i]=np.load(f"{testDir}{roiloc}/{sub}/output/top{num}.npy")
-    #             print(f"{roiloc} {sub} {num} ROIs acc={wangAcc[num-1,sub_i]}")
-            except:
-                pass
+            # try:
+            wangAcc[num-1,sub_i]=np.load(f"{testDir}{roiloc}/{sub}/output/uniMaskRank_top{num}.npy")
+            # print(f"{roiloc} {sub} {num} ROIs acc={wangAcc[num-1,sub_i]}")
+            # except:
+            #     pass
 
-    schaeferAcc=np.zeros((300,3))
+    schaeferAcc=np.zeros((300,len(subs)))
     roiloc="schaefer2018"
     for sub_i,sub in enumerate(subjects):
         for num in range(1,301):
-            try:
-                schaeferAcc[num-1,sub_i]=np.load(f"{testDir}{roiloc}/{sub}/output/top{num}.npy")
-    #             print(f"{roiloc} {sub} {num} ROIs acc={schaeferAcc[num-1,sub_i]}")
-            except:
-                pass
+            # try:
+            schaeferAcc[num-1,sub_i]=np.load(f"{testDir}{roiloc}/{sub}/output/uniMaskRank_top{num}.npy")
+            # print(f"{roiloc} {sub} {num} ROIs acc={schaeferAcc[num-1,sub_i]}")
+            # except:
+            #     pass
 
 
     wangAcc=wangAcc[:,wangAcc[0]!=0]
@@ -316,5 +314,24 @@ def plot():
         
     plt.xlabel("number of ROIs")
     plt.ylabel("accuracy")
-    plt.savefig('SummaryAccuracy.png')
-    # next step is to use averageAggregatee.sh to cnvert things to standard space and add things together to visualize things.
+    # plt.savefig('SummaryAccuracy.png')
+
+
+    plt.figure()
+    plt.plot(np.mean(schaeferAcc,axis=1))
+    plt.plot(np.mean(wangAcc,axis=1))
+
+
+    schaeferAcc_mean=np.mean(schaeferAcc,axis=1)
+    bestID=np.where(schaeferAcc_mean==np.nanmax(schaeferAcc_mean))[0][0]
+    _=plt.figure()
+    for i in range(schaeferAcc.shape[0]):
+        plt.scatter([i]*schaeferAcc.shape[1],schaeferAcc[i],c='g',s=2)
+    plt.plot(np.arange(schaeferAcc.shape[0]),np.nanmean(schaeferAcc,axis=1))
+    plt.ylim([0.19,0.36])
+    plt.plot([bestID]*10,np.arange(0.19,0.36,(0.36-0.19)/10))
+
+
+    plt.plot(np.arange(schaeferAcc.shape[0]),np.nanmean(schaeferAcc,axis=1))
+    plt.plot([bestID]*10,np.arange(0.255,0.264,(0.264-0.255)/10))
+    plt.title(f"bestID={bestID}")
