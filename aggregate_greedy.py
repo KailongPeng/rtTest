@@ -151,7 +151,7 @@ def Class(data, bcvar):
         trainY = []
         for meta in range(6):
             if meta != run:
-                trainY.extend(metas[run])
+                trainY.extend(metas[meta])
         clf = LogisticRegression(penalty='l2',C=1, solver='lbfgs', max_iter=1000, 
                                  multi_class='multinomial').fit(trainX, trainY)
                 
