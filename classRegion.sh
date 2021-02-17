@@ -3,8 +3,8 @@
 
 #SBATCH --output=logs/maskmaker-%j.out
 #SBATCH --job-name searchlight
-#SBATCH --partition=verylong
-#SBATCH --time=20:00:00
+#SBATCH --partition=long,verylong,short,day,scavenge
+#SBATCH --time=1:00:00
 #SBATCH --mem=100000
 #SBATCH -n 25
 

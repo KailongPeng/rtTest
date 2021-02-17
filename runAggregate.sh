@@ -22,7 +22,6 @@ do
 done
 
 
-
 roiloc=schaefer2018
 for sub in $subjects;
 do

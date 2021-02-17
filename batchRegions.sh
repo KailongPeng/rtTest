@@ -11,7 +11,7 @@ do
   do
     for num in {1..25};
     do
-      sbatch classRegion.sh $sub neurosketch $roiloc $num $hemi
+      sbatch --requeue classRegion.sh $sub neurosketch $roiloc $num $hemi
       echo $sub neurosketch $roiloc $num $hemi
     done
   done
@@ -24,7 +24,7 @@ for sub in $subjects;
 do
   for num in {1..300};
   do
-    sbatch classRegion.sh $sub neurosketch $roiloc $num
+    sbatch --requeue classRegion.sh $sub neurosketch $roiloc $num
     echo $sub neurosketch $roiloc $num
   done
 done
