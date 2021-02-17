@@ -56,7 +56,7 @@ else:
 
 print("Running subject {}, with {} as a data source, {} roi #{} {}".format(subject, dataSource, roiloc, roinum, roihemi))
 
-
+workDir="/gpfs/milgram/project/turk-browne/projects/rtTest/"
 # dataSource depending, there are a number of keywords to fill in: 
 # ses: which day of data collection
 # run: which run number on that day (single digit)
@@ -101,7 +101,7 @@ def Class(data, bcvar):
         trainY = []
         for meta in range(6):
             if meta != run:
-                trainY.extend(metas[run])
+                trainY.extend(metas[meta])
         clf = LogisticRegression(penalty='l2',C=1, solver='lbfgs', max_iter=1000, 
                                  multi_class='multinomial').fit(trainX, trainY)
                 
@@ -115,7 +115,7 @@ def Class(data, bcvar):
 phasedict = dict(zip([1,2,3,4,5,6],["12", "12", "34", "34", "56", "56"]))
 imcodeDict={"A": "bed", "B": "Chair", "C": "table", "D": "bench"}
 
-mask = nib.load("./{}/{}/{}{}.nii.gz".format(roiloc, subject, roinum, roihemi)).get_data()
+mask = nib.load(workDir+"{}/{}/{}{}.nii.gz".format(roiloc, subject, roinum, roihemi)).get_data()
 mask = mask.astype(int)
 # say some things about the mask.
 print('mask dimensions: {}'. format(mask.shape))
@@ -157,12 +157,12 @@ for run in range(1, 7):
     runImDat = runIm.get_data()
     
     # Use the TR numbers to select the correct features
-    features = [runImDat[:,:,:,n+3] for n in TR_num]
+    features = [runImDat[:,:,:,n+3] for n in TR_num] #axis0 is time/repetition
     features = np.array(features)
     features = features[:, mask==1]
     print("shape of features", features.shape, "shape of mask", mask.shape)
-    featmean = features.mean(1)[..., None]
-    features = features - featmean
+    # featmean = features.mean(1)[..., None] # equivalent to featmean = np.mean(features,axis=1).reshape(-1,1)
+    features = features - features.mean(0)
     features = np.expand_dims(features, 0)
     
     # Append both so we can use it later
@@ -190,6 +190,6 @@ SL = time.time() - slstart
 tot = time.time() - starttime
 print('total time: {}, searchlight time: {}'.format(tot, SL))
 
-outfile = "./{}/{}/output/{}{}.npy".format(roiloc, subject, roinum, roihemi)
+outfile = workDir+"{}/{}/output/{}{}.npy".format(roiloc, subject, roinum, roihemi)
 print(outfile)
 np.save(outfile, np.array(sl_result))
