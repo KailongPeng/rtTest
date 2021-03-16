@@ -59,7 +59,7 @@ except:
 
 print("Running subject {}, with {} as a data source, {}, starting with {} ROIs".format(subject, dataSource, roiloc, N))
 
-tag="_GM"
+tag="GM"
 
 # dataSource depending, there are a number of keywords to fill in: 
 # ses: which day of data collection
@@ -81,23 +81,25 @@ else:
 
 workingDir="/gpfs/milgram/project/turk-browne/projects/rtTest/"
 starttime = time.time()
-tag="tag2"
 # '1201161', '1121161','0115172','0112174' #these subject have nothing in output folder
 subjects_correctly_aligned=['1206161','0119173','1206162','1130161','1206163','0120171','0111171','1202161','0125172','0110172','0123173','0120173','0110171','0119172','0124171','0123171','1203161','0118172','0118171','0112171','1207162','0117171','0119174','0112173','0112172']
 if roiloc == "schaefer2018":
-    RESULT=np.empty((len(subjects_correctly_aligned),300))
+    RESULT=np.zeros((len(subjects_correctly_aligned),300))
     topN = []
     for ii,sub in enumerate(subjects_correctly_aligned):
         outloc = workingDir+"/{}/{}/output".format(roiloc, sub)
         for roinum in range(1,301):
-            result = np.load(f"{outloc}/{tag}_{roinum}.npy")
-            RESULT[ii,roinum-1]=result
+            try: # 这里之所以要“try”是因为有的Schaefer ROI在被GM mask之后的voxel数目变成了0
+                result = np.load(f"{outloc}/{roinum}_{tag}.npy")
+                RESULT[ii,roinum-1]=result
+            except:
+                pass
             # RESULT = result if roinum == 1 else np.vstack((RESULT, result))
-    RESULT = np.mean(RESULT,axis=0)
+    RESULT = np.nanmean(RESULT,axis=0)
     print(f"RESULT.shape={RESULT.shape}")
     RESULTix = RESULT[:].argsort()[-N:]
     for idx in RESULTix:
-        topN.append("{}.nii.gz".format(idx+1))
+        topN.append(f"{tag}_{idx+1}.nii.gz")
         print(topN[-1])
 else:
     RESULT_all=[]
@@ -106,7 +108,7 @@ else:
         outloc = workingDir+"/{}/{}/output".format(roiloc, sub)
         for hemi in ["lh", "rh"]:
             for roinum in range(1, 26):
-                result = np.load(f"{outloc}/{tag}_roi{roinum}_{hemi}.npy")
+                result = np.load(f"{outloc}/roi{roinum}_{hemi}_{tag}.npy")
                 # result = np.load("{}/roi{}_{}.npy".format(outloc, roinum, hemi))
                 # outfile = workDir+"{}/{}/output/tag2_{}{}.npy".format(roiloc, subject, roinum, roihemi)
                 Result = result if roinum == 1 else np.vstack((Result, result))
@@ -125,9 +127,9 @@ else:
     for x, y, in zip(x_idx, y_idx):
         print(x,y)
         if y == 0:
-            topN.append("roi{}_lh.nii.gz".format(x+1))
+            topN.append(f"{tag}_roi{x+1}_lh.nii.gz")
         else:
-            topN.append("roi{}_rh.nii.gz".format(x+1))
+            topN.append(f"{tag}_roi{x+1}_rh.nii.gz")
         print(topN[-1])
 
 
@@ -173,7 +175,7 @@ phasedict = dict(zip([1,2,3,4,5,6],["12", "12", "34", "34", "56", "56"]))
 imcodeDict={"A": "bed", "B": "Chair", "C": "table", "D": "bench"}
 
 for pn, parc in enumerate(topN):
-    _mask = nib.load(workingDir+"/{}/{}/{}".format(roiloc, subject, parc))
+    _mask = nib.load(workingDir+f"/{roiloc}/{subject}/{parc}")
     aff = _mask.affine
     _mask = _mask.get_data()
     _mask = _mask.astype(int)
@@ -254,16 +256,17 @@ tot = time.time() - starttime
 print('total time: {}, searchlight time: {}'.format(tot, SL))
 
 # SAVE accuracy
-outfile = workingDir+f"/{roiloc}/{subject}/output/uniMaskRank{tag}_top{N}.npy"
+outfile = workingDir+f"/{roiloc}/{subject}/output/uniMaskRank_{tag}_top{N}.npy"
+print(f"sl_result path={outfile}")
 np.save(outfile, np.array(sl_result))
 # SAVE mask
 savemask = nib.Nifti1Image(mask, affine=aff)
-nib.save(savemask, workingDir+f"/{roiloc}/{subject}/output/uniMaskRank{tag}_top{N}mask.nii.gz")
+nib.save(savemask, workingDir+f"/{roiloc}/{subject}/output/uniMaskRank_{tag}_top{N}mask.nii.gz")
 # SAVE roilist, nvox
 ROILIST = [r for r in topN]
 ROILIST.append(np.sum(mask))
 ROILIST = pd.DataFrame(ROILIST)
-ROILIST.to_csv(workingDir+f"/{roiloc}/{subject}/output/uniMaskRank{tag}_top{N}.csv")
+ROILIST.to_csv(workingDir+f"/{roiloc}/{subject}/output/uniMaskRank_{tag}_top{N}.csv")
 
 
 
@@ -286,26 +289,26 @@ def plot():
     subs=subjects_correctly_aligned
     subjects=subs #["0110171", "0110172", "0111171"]
     hemis=["lh", "rh"]
-
+    tag="GM"
     wangAcc=np.zeros((50,len(subs)))
-    roiloc="wang2014"
-    for sub_i,sub in enumerate(subjects):
-        for num in range(1,51):
-            # try:
-            wangAcc[num-1,sub_i]=np.load(f"{testDir}{roiloc}/{sub}/output/uniMaskRank2_top{num}.npy")
-            # print(f"{roiloc} {sub} {num} ROIs acc={wangAcc[num-1,sub_i]}")
-            # except:
-            #     pass
+    # roiloc="wang2014"
+    # for sub_i,sub in enumerate(subjects):
+    #     for num in range(1,51):
+    #         # try:
+    #         wangAcc[num-1,sub_i]=np.load(f"{testDir}{roiloc}/{sub}/output/uniMaskRank_{tag}_top{num}.npy")
+    #         # print(f"{roiloc} {sub} {num} ROIs acc={wangAcc[num-1,sub_i]}")
+    #         # except:
+    #         #     pass
 
     schaeferAcc=np.zeros((300,len(subs)))
     roiloc="schaefer2018"
     for sub_i,sub in enumerate(subjects):
         for num in range(1,301):
-            # try:
-            schaeferAcc[num-1,sub_i]=np.load(f"{testDir}{roiloc}/{sub}/output/uniMaskRank2_top{num}.npy")
+            try:
+                schaeferAcc[num-1,sub_i]=np.load(f"{testDir}{roiloc}/{sub}/output/uniMaskRank_{tag}_top{num}.npy")
             # print(f"{roiloc} {sub} {num} ROIs acc={schaeferAcc[num-1,sub_i]}")
-            # except:
-            #     pass
+            except:
+                pass
 
 
     wangAcc=wangAcc[:,wangAcc[0]!=0]

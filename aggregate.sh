@@ -1,11 +1,14 @@
 #!/usr/bin/env bash
-# Input python command to be submitted as a job
-#SBATCH --output=logs/agg-%j.out
 #SBATCH --job-name aggregate
-#SBATCH --partition=verylong,short,day,scavenge
-#SBATCH --time=1:00:00 #20:00:00
+#SBATCH --nodes=1 --ntasks-per-node=1
+#SBATCH --time=1:00:00
 #SBATCH --mem=10000
-#SBATCH -n 5
+#SBATCH --output=logs/agg_%A_%a.out
+#SBATCH --requeue
+#SBATCH --partition=short,day,scavenge,long,verylong
+#SBATCH --mail-type FAIL
+#SBATCH --mail-user=kp578
+
 
 # Set up the environment
 module load FSL/5.0.9
@@ -18,7 +21,7 @@ module load nilearn
 subject=$1
 dataloc=$2
 roiloc=$3
-Nregions=$4
+Nregions=$SLURM_ARRAY_TASK_ID
 
 # Run the python scripts
 echo "running searchlight"

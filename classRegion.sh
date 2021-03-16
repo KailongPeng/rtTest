@@ -1,12 +1,11 @@
 #!/usr/bin/env bash
-# Input python command to be submitted as a job
-
-#SBATCH --output=logs/maskmaker-%j.out
 #SBATCH --job-name searchlight
-#SBATCH --partition=long,verylong,short,day,scavenge
+#SBATCH --nodes=1 --ntasks-per-node=1
 #SBATCH --time=1:00:00
 #SBATCH --mem=100000
-#SBATCH -n 25
+#SBATCH --output=logs/searchlight_%A_%a.out
+#SBATCH --requeue
+#SBATCH --partition=short,day,scavenge,long,verylong
 #SBATCH --mail-type FAIL
 #SBATCH --mail-user=kp578
 
@@ -22,8 +21,10 @@ module load nilearn
 subject=$1
 dataloc=$2
 roiloc=$3
-roinum=$4
-roihemi=$5
+# roinum=$4
+roinum=$SLURM_ARRAY_TASK_ID
+# roihemi=$5
+roihemi=$4 # this can be blank for Schaefer atlas
 
 # Run the python scripts
 echo "running searchlight"

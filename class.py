@@ -1,6 +1,7 @@
 import os
 print(f"conda env={os.environ['CONDA_DEFAULT_ENV']}") 
-import sys,pickle
+import sys
+import pickle5 as pickle
 import numpy as np
 from sklearn.linear_model import LogisticRegression
 import nibabel as nib
@@ -12,7 +13,6 @@ def save_obj(obj, name):
 def load_obj(name):
     with open(name + '.pkl', 'rb') as f:
         return pickle.load(f)
-
 
 def Class(data, bcvar):
     metas = bcvar[0]
@@ -51,7 +51,7 @@ def getMask(topN, subject):
         mask[mask>0] = 1
     return mask
 
-tmpFile = sys.argv[1]
+tmpFile = f"{sys.argv[1]}{int(sys.argv[2])-1}"
 print(f"tmpFile={tmpFile}")
 [_topN,subject,dataSource,roiloc,N] = load_obj(tmpFile)
 [bcvar,runs] = load_obj(f"./tmp__folder/{subject}_{dataSource}_{roiloc}_{N}") 

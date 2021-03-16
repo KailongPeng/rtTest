@@ -16,13 +16,11 @@ hemis="lh rh"
 
 
 roiloc=schaefer2018
-for sub in $subjects;
-do
-  for num in 25; #best ID is 30 thus the best num is 31
-  do
-    echo sbatch --requeue aggregate_greedy.sh $sub neurosketch $roiloc $num
-    # sbatch --requeue aggregate_greedy.sh $sub neurosketch $roiloc $num
-  done
+for sub in $subjects;do
+  # for num in 25;do #best ID is 30 thus the best num is 31
+  num=78 #best ID is 77 thus the best num is 78
+  echo sbatch --requeue aggregate_greedy.sh $sub neurosketch $roiloc $num
+  sbatch --requeue aggregate_greedy.sh $sub neurosketch $roiloc $num
 done
 
 
