@@ -54,7 +54,7 @@ def getMask(topN, subject):
 tmpFile = sys.argv[1]
 print(f"tmpFile={tmpFile}")
 [_topN,subject,dataSource,roiloc,N] = load_obj(tmpFile)
-[bcvar,runs] = load_obj(f"./tmp_folder/{subject}_{dataSource}_{roiloc}_{N}") 
+[bcvar,runs] = load_obj(f"./tmp__folder/{subject}_{dataSource}_{roiloc}_{N}") 
 _mask=getMask(_topN,subject) ; print('mask dimensions: {}'. format(_mask.shape)) ; print('number of voxels in mask: {}'.format(np.sum(_mask)))
 _runs = [runs[:,:,_mask==1]] ; print("Runs shape", _runs[0].shape)
 

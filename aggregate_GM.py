@@ -59,6 +59,7 @@ except:
 
 print("Running subject {}, with {} as a data source, {}, starting with {} ROIs".format(subject, dataSource, roiloc, N))
 
+tag="_GM"
 
 # dataSource depending, there are a number of keywords to fill in: 
 # ses: which day of data collection

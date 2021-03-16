@@ -6,6 +6,8 @@
 #SBATCH --time=20:00:00
 #SBATCH --mem=10000
 #SBATCH -n 5
+#SBATCH --mail-type FAIL
+#SBATCH --mail-user=kp578
 
 # Set up the environment
 module load FSL/5.0.9

@@ -303,7 +303,7 @@ def next(topN):
             while os.path.exists("./tmp__folder/holdon.npy"):
                 time.sleep(10)
                 print("sleep for 10s ; waiting for ./tmp__folder/holdon.npy to be deleted")
-            np.save("./tmp__folder/holdon",1)
+            # np.save("./tmp__folder/holdon",1)
 
             for i,_topN in enumerate(allpairs):
                 tmpFile=f"./tmp__folder/{subject}_{N}_{roiloc}_{dataSource}_{len(topN)}_{i}"
@@ -315,29 +315,43 @@ def next(topN):
 
                     # prepare brain data(runs) mask and behavior data(bcvar) 
 
-                    save_obj([_topN,subject,dataSource,roiloc,N], tmpFile)
+                    # save_obj([_topN,subject,dataSource,roiloc,N], tmpFile)
 
                     print("kp2")
-                    numberOfJobsRunning = numOfRunningJobs()
+                    # numberOfJobsRunning = numOfRunningJobs()
                     print("kp3")
-                    while numberOfJobsRunning > 400: # 300 is not filling it up
-                        print("kp4 300")
-                        print("waiting 10, too many jobs running") ; time.sleep(10)
-                        numberOfJobsRunning = numOfRunningJobs()
-                        print("kp5")
+                    # while numberOfJobsRunning > 400: # 300 is not filling it up
+                    #     print("kp4 300")
+                    #     print("waiting 10, too many jobs running") ; time.sleep(10)
+                    #     numberOfJobsRunning = numOfRunningJobs()
+                    #     print("kp5")
 
                     # get the evidence for the current mask
-                    print(f'sbatch class.sh {tmpFile}')
-                    proc = subprocess.Popen([f'sbatch --requeue class.sh {tmpFile}'],shell=True) # sl_result = Class(_runs, bcvar) 
-                    
-                    outs, errs = proc.communicate(timeout=5)
+                    # print(f'sbatch class.sh {tmpFile}')
+                    # proc = subprocess.Popen([f'sbatch --requeue class.sh {tmpFile}'],shell=True) # sl_result = Class(_runs, bcvar) 
+                    # tmpFile = tmpFile #sys.argv[1]
+                    print(f"tmpFile={tmpFile}")
+                    # [_topN,subject,dataSource,roiloc,N] = load_obj(tmpFile)
+                    # [bcvar,runs] = load_obj(f"./tmp__folder/{subject}_{dataSource}_{roiloc}_{N}") 
+                    _mask=getMask(_topN,subject) ; print('mask dimensions: {}'. format(_mask.shape)) ; print('number of voxels in mask: {}'.format(np.sum(_mask)))
+                    _runs = [runs[:,:,_mask==1]] ; print("Runs shape", _runs[0].shape)
+
+                    # [_runs,bcvar] = load_obj(tmpFile)
+                    sl_result = Class(_runs, bcvar)
+
+                    np.save(tmpFile+'_result',sl_result)
+
+                    print(f"sl_result={sl_result}")
+
+
+                    # outs, errs = proc.communicate(timeout=5)
                     # print(f"outs={outs}")
                     # print(f"errs={errs}")
                     
                     print("kp6")
                 else:
                     print(tmpFile+'_result.npy exists!')
-            os.remove("./tmp__folder/holdon.npy")
+            # os.remove("./tmp__folder/holdon.npy")
 
             sl_results=[]
             for tmpFile in tmpFiles:

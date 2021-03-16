@@ -119,16 +119,16 @@ def Class(data, bcvar):
 phasedict = dict(zip([1,2,3,4,5,6],["12", "12", "34", "34", "56", "56"]))
 imcodeDict={"A": "bed", "B": "Chair", "C": "table", "D": "bench"}
 
-mask = nib.load(workDir+"{}/{}/{}{}.nii.gz".format(roiloc, subject, roinum, roihemi)).get_data()
+maskPath=workDir+f"{roiloc}/{subject}/GM_{roinum}{roihemi}.nii.gz"
+print(f"maskPath={maskPath}")
+mask = nib.load(maskPath).get_data()
 mask = mask.astype(int)
 # say some things about the mask.
 print('mask dimensions: {}'. format(mask.shape))
 print('number of voxels in mask: {}'.format(np.sum(mask)))
 
-
 # Compile preprocessed data and corresponding indices
 metas = []
-
 for run in range(1, 7):
     print(run, end='--')
     # retrieve from the dictionary which phase it is, assign the session
@@ -194,7 +194,7 @@ SL = time.time() - slstart
 tot = time.time() - starttime
 print('total time: {}, searchlight time: {}'.format(tot, SL))
 
-tag="tag2"
-outfile = workDir+f"{roiloc}/{subject}/output/{tag}_{roinum}{roihemi}.npy"
+tag="_GM"
+outfile = workDir+f"{roiloc}/{subject}/output/{roinum}{roihemi}{tag}.npy"
 print(outfile)
 np.save(outfile, np.array(sl_result))
